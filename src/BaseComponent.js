@@ -1,13 +1,9 @@
-import React, {useState} from 'react';
-import {View, StyleSheet, ActivityIndicator} from 'react-native';
+import React from 'react';
+import {View, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
 const HtmlData = require('./scripts/index.html');
 
-const htmlData = HtmlData;
-
 export default function AmCharts(props) {
-  const [isLoading, setIsLoading] = useState(true);
-
   const chartData = JSON.stringify(props.chartConfig);
   const chartConfig = `
   am4core.useTheme(am4themes_material);
@@ -21,17 +17,16 @@ export default function AmCharts(props) {
   `;
   return (
     <View style={[styles.loadingContiainer, {...props.style}]}>
-      {isLoading ? <ActivityIndicator style={styles.loadingIndicator} /> : null}
+      {/* {isLoading ? <ActivityIndicator style={styles.loadingIndicator} /> : null} */}
       <WebView
         style={styles.webView}
-        source={htmlData}
+        source={HtmlData}
         startInLoadingState
-        onLoadEnd={() => setIsLoading(false)}
         injectedJavaScript={chartConfig}
         javaScriptEnabled
         useWebKit
-        onMessage={message => {
-          console.log('the url is', message);
+        onMessage={() => {
+          console.log('');
         }}
         scalesPageToFit
         scrollEnabled={false}
@@ -41,7 +36,7 @@ export default function AmCharts(props) {
 }
 
 const styles = StyleSheet.create({
-  webView: {width: '100%', borderWidth: 1, height: '100%'},
+  webView: {width: '100%', height: '100%'},
   loading: {
     width: 0,
     height: 0,
@@ -53,6 +48,5 @@ const styles = StyleSheet.create({
   loadingContiainer: {
     height: '100%',
     width: '100%',
-    backgroundColor: '#ddd',
   },
 });

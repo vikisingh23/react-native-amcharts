@@ -1,14 +1,22 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+# React-native AmCharts : - WIP
+====================
+#### Unofficial React-Native wrapper package for using [AmCharts](https://www.amcharts.com/).
 
+### Features
+1. Fully customizable wrapper for AmCharts4 using [JSON-based Config](https://www.amcharts.com/docs/v4/concepts/json-config/#Structure_of_JSON_config).
+2. All scripts loaded in the package  no CDN dependency for faster performance.
+3. Supported on Ios and Android.
+
+### Installing
+Get package from NPM in your React-native app:
+
+```npm i react-native-amcharts```
+
+### Basic Usage Example
+```javascript
 import React from 'react';
-import {StatusBar} from 'react-native';
-import BaseComponent from './src/BaseComponent';
+import {Stylesheet} from 'react-native';
+import ReactNativeAmChart from 'react-native-amcharts';
 
 const config = {
   // Create pie series
@@ -69,9 +77,16 @@ const config = {
 const App = () => {
   return (
     <>
-      <StatusBar barStyle="dark-content" />
-      <BaseComponent chartConfig={config} chartType="PieChart" />
+      <ReactNativeAmChart chartConfig={config} chartType="PieChart" style={styles.chartContainer}/>
     </>
   );
 };
+
+const styles = Stylesheet.create({
+    chartContainer: {
+        height: '50%',
+        width: '100%',
+    }
+})
 export default App;
+```
