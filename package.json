@@ -1,7 +1,11 @@
 {
-  "name": "react-native-amcharts-wrapper",
+  "name": "react-native-amcharts",
   "version": "0.0.1",
-  "private": true,
+  "author": "Vikas Singh",
+  "private": false,
+  "license": "MIT",
+  "keywords":[ "react-native", "amcharts", "charts", "react-native amcharts"],
+  "main": "index.js",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -10,11 +14,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@amcharts/amcharts4": "^4.9.17",
     "react": "16.11.0",
     "react-native": "0.62.2",
-    "react-native-fs": "^2.16.6",
-    "react-native-webview": "^9.2.1"
+    "react-native-webview": "9.2.1"
   },
   "devDependencies": {
     "@babel/core": "7.9.0",
@@ -28,5 +30,9 @@
   },
   "jest": {
     "preset": "react-native"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vikisingh23/react-native-amcharts.git"
   }
 }
