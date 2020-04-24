@@ -1,5 +1,6 @@
 # React-native AmCharts : - WIP
 
+
 #### Unofficial React-Native wrapper package for using [AmCharts](https://www.amcharts.com/).
 
 ### Features
@@ -13,6 +14,7 @@ Get package from NPM in your React-native app:
 ```npm i react-native-amcharts```
 
 ### Basic Usage Example
+
 ```javascript
 import React from 'react';
 import {Stylesheet} from 'react-native';
@@ -113,4 +115,5 @@ export default App;
 
 ##### Feature in progress
 
-- Dynamic data addition
+- Dynamic data addition to graph
+
