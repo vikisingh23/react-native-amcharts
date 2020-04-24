@@ -6,6 +6,8 @@ const HtmlData = require('./scripts/index.html');
 export default function AmCharts(props) {
   const chartData = JSON.stringify(props.chartConfig);
   const chartConfig = `
+  document.getElementById("scalingtag").setAttribute("content","width=device-width, initial-scale=${0.9 ||
+    props.initialScale}, maximum-scale=${0.9 || props.maximumScale}");
   am4core.useTheme(am4themes_material);
   am4core.useTheme(am4themes_animated);
   am4core.ready(function() {

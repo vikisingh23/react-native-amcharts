@@ -1,5 +1,5 @@
 # React-native AmCharts : - WIP
-====================
+
 #### Unofficial React-Native wrapper package for using [AmCharts](https://www.amcharts.com/).
 
 ### Features
@@ -16,7 +16,7 @@ Get package from NPM in your React-native app:
 ```javascript
 import React from 'react';
 import {Stylesheet} from 'react-native';
-import ReactNativeAmChart from 'react-native-amcharts';
+import {ReactNativeAmChart} from 'react-native-amcharts';
 
 const config = {
   // Create pie series
@@ -77,7 +77,12 @@ const config = {
 const App = () => {
   return (
     <>
-      <ReactNativeAmChart chartConfig={config} chartType="PieChart" style={styles.chartContainer}/>
+      <ReactNativeAmChart 
+        chartConfig={config} 
+        chartType="PieChart" 
+        style={styles.chartContainer} 
+        initialScale={0.9}
+        maximumScale={0.9}/>
     </>
   );
 };
@@ -90,3 +95,22 @@ const styles = Stylesheet.create({
 })
 export default App;
 ```
+
+
+#### Props Defitnition
+
+- **style**  Styling chart container
+
+- **chartType** Chart type definition from amcharts library
+
+- **chartConfig**  JSON config for displaying the charts
+
+- **initialScale** Initial Viewport scale for frame
+
+- **maximumScale** Maximum Viewport scale for frame
+
+
+
+##### Feature in progress
+
+- Dynamic data addition
