@@ -1,12 +1,7 @@
-# Source HTML (replaced by getChartHtml.js)
-src/scripts/
-
-# Config files
+tsconfig.json
 .eslintrc.js
 .prettierrc.js
 .gitignore
 .git/
-
-# Misc
 node_modules/
 *.log

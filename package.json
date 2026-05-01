@@ -1,16 +1,22 @@
 {
   "name": "react-native-amcharts",
-  "version": "1.0.0",
-  "description": "React Native wrapper for AmCharts 4 using JSON-based config",
+  "version": "2.0.0",
+  "description": "React Native wrapper for AmCharts 4 — TypeScript, bidirectional bridge, smart updates",
   "author": "Vikas Singh",
   "license": "MIT",
-  "main": "index.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "tsc"
+  },
   "keywords": [
     "react-native",
     "amcharts",
     "amcharts4",
     "charts",
-    "react-native-charts"
+    "react-native-charts",
+    "typescript"
   ],
   "repository": {
     "type": "git",
@@ -21,9 +27,16 @@
     "react-native": ">=0.60.0",
     "react-native-webview": ">=11.0.0"
   },
+  "devDependencies": {
+    "@types/react": "^18.3.28",
+    "@types/react-native": "^0.72.8",
+    "react": "^19.2.5",
+    "react-native": "^0.85.2",
+    "react-native-webview": "^13.16.1",
+    "typescript": "^5.9.3"
+  },
   "files": [
-    "index.js",
-    "src/BaseComponent.js",
-    "src/getChartHtml.js"
+    "lib/",
+    "src/"
   ]
 }

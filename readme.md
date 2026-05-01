@@ -1,14 +1,16 @@
-# React Native AmCharts
+# React Native AmCharts v2
 
-Unofficial React Native wrapper for [AmCharts 4](https://www.amcharts.com/) using [JSON-based Config](https://www.amcharts.com/docs/v4/concepts/json-config/).
+TypeScript wrapper for [AmCharts 4](https://www.amcharts.com/) in React Native with a bidirectional bridge, smart config updates, and imperative API.
 
 ## Features
 
-- AmCharts 4 via JSON config — no native code required
-- Works on iOS and Android
-- Dynamic data updates
-- Lightweight — scripts loaded from CDN (no bundled 43K-line HTML)
-- Compatible with React Native 0.60+ and react-native-webview 11+
+- **TypeScript** — Full type definitions for props, config, and events
+- **Bidirectional bridge** — Call chart methods from RN, receive events back
+- **Smart updates** — Diffs config changes; sends data-only updates when possible
+- **Selective script loading** — Only loads the amcharts modules your chart type needs
+- **Imperative API** — `ref` to call methods, export images, update data
+- **Error boundaries** — Custom `renderError` and `renderLoading` components
+- **Lightweight** — Scripts from CDN, ~3KB package size
 
 ## Installation
 
@@ -16,65 +18,105 @@ Unofficial React Native wrapper for [AmCharts 4](https://www.amcharts.com/) usin
 npm install react-native-amcharts react-native-webview
 ```
 
-For React Native 0.60+, WebView auto-links. For older versions:
+## Basic Usage
 
-```bash
-react-native link react-native-webview
-```
-
-## Usage
-
-```jsx
+```tsx
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-import {ReactNativeAmChart} from 'react-native-amcharts';
+import { View, StyleSheet } from 'react-native';
+import { ReactNativeAmChart } from 'react-native-amcharts';
 
 const config = {
-  series: [
-    {
-      type: 'PieSeries',
-      dataFields: {value: 'litres', category: 'country'},
-    },
-  ],
+  series: [{
+    type: 'PieSeries',
+    dataFields: { value: 'litres', category: 'country' },
+  }],
   data: [
-    {country: 'Lithuania', litres: 501.9},
-    {country: 'Czech Republic', litres: 301.9},
-    {country: 'Ireland', litres: 201.1},
-    {country: 'Germany', litres: 165.8},
+    { country: 'Lithuania', litres: 501.9 },
+    { country: 'Germany', litres: 165.8 },
+    { country: 'Australia', litres: 139.9 },
   ],
   legend: {},
 };
 
 export default function App() {
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <ReactNativeAmChart
         chartConfig={config}
         chartType="PieChart"
-        style={styles.chart}
+        style={{ height: 400 }}
         onReady={() => console.log('Chart ready')}
       />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {flex: 1},
-  chart: {height: '50%', width: '100%'},
-});
 ```
 
-## Dynamic Data
+## Imperative API (ref)
 
-Update chart data by passing new `chartConfig.data`:
+```tsx
+import React, { useRef } from 'react';
+import { ReactNativeAmChart, ChartHandle } from 'react-native-amcharts';
 
-```jsx
-const [data, setData] = React.useState(initialData);
+function Dashboard() {
+  const chartRef = useRef<ChartHandle>(null);
+
+  const zoomIn = async () => {
+    await chartRef.current?.call('xAxes.getIndex(0).zoomToIndexes', 0, 5);
+  };
+
+  const updateData = () => {
+    chartRef.current?.setData([
+      { country: 'Lithuania', litres: 600 },
+      { country: 'Germany', litres: 200 },
+    ]);
+  };
+
+  return (
+    <>
+      <ReactNativeAmChart
+        ref={chartRef}
+        chartConfig={config}
+        chartType="XYChart"
+        style={{ height: 400 }}
+      />
+      <Button title="Zoom" onPress={zoomIn} />
+      <Button title="Update" onPress={updateData} />
+    </>
+  );
+}
+```
+
+## Smart Updates
+
+The component automatically detects what changed in your config:
+
+| Change | Action |
+|--------|--------|
+| Only `data` changed | Sends `updateData` (no chart rebuild) |
+| Other config keys changed | Sends `updateConfig` patch |
+| `chartType` changed | Full chart re-initialization |
+
+```tsx
+// Only data changes → chart updates smoothly without flickering
+const [data, setData] = useState(initialData);
 
 <ReactNativeAmChart
-  chartConfig={{...config, data}}
+  chartConfig={{ ...config, data }}
   chartType="XYChart"
-  style={styles.chart}
+  style={{ height: 400 }}
+/>
+```
+
+## Error & Loading States
+
+```tsx
+<ReactNativeAmChart
+  chartConfig={config}
+  chartType="PieChart"
+  renderLoading={() => <MySkeletonLoader />}
+  renderError={(msg) => <Text>Chart error: {msg}</Text>}
+  onError={(msg) => logToSentry(msg)}
 />
 ```
 
@@ -82,23 +124,35 @@ const [data, setData] = React.useState(initialData);
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `chartConfig` | `object` | **required** | AmCharts 4 JSON config |
-| `chartType` | `string` | **required** | Chart type (e.g. `PieChart`, `XYChart`) |
-| `style` | `ViewStyle` | `{}` | Container style |
-| `initialScale` | `number` | `0.9` | WebView initial viewport scale |
-| `maximumScale` | `number` | `0.9` | WebView maximum viewport scale |
-| `themes` | `string[]` | `['material', 'animated']` | AmCharts themes to apply |
-| `onReady` | `function` | — | Called when chart finishes rendering |
+| `chartConfig` | `ChartConfig` | **required** | AmCharts 4 JSON config |
+| `chartType` | `ChartType` | **required** | `'PieChart'`, `'XYChart'`, `'MapChart'`, etc. |
+| `style` | `ViewStyle` | — | Container style |
+| `themes` | `AmTheme[]` | `['animated', 'material']` | Themes to apply |
+| `initialScale` | `number` | `1` | Viewport initial scale |
+| `maximumScale` | `number` | `1` | Viewport max scale |
+| `cdnBase` | `string` | `https://cdn.amcharts.com/lib/4` | Custom CDN URL |
+| `extraScripts` | `string[]` | `[]` | Additional script URLs |
+| `onReady` | `() => void` | — | Chart ready callback |
+| `onError` | `(msg: string) => void` | — | Error callback |
+| `onEvent` | `(event: ChartEvent) => void` | — | Chart event handler |
+| `renderLoading` | `() => ReactElement` | `ActivityIndicator` | Custom loader |
+| `renderError` | `(msg: string) => ReactElement` | — | Custom error view |
 
-## Supported Chart Types
+## ChartHandle (ref methods)
 
-Any AmCharts 4 chart type works: `PieChart`, `XYChart`, `MapChart`, `RadarChart`, `TreeMap`, `SankeyDiagram`, etc.
+| Method | Description |
+|--------|-------------|
+| `call(method, ...args)` | Call any chart method (returns Promise) |
+| `setData(data)` | Replace chart data |
+| `updateConfig(patch)` | Patch chart config |
+| `dispose()` | Dispose the chart |
+| `injectScript(js)` | Run raw JS in WebView |
 
 ## Requirements
 
 - React Native >= 0.60
-- react-native-webview >= 11.0.0
-- Internet connection (CDN scripts)
+- react-native-webview >= 11
+- Internet connection (CDN)
 
 ## License
 
