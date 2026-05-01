@@ -1,54 +1,101 @@
-import React from 'react';
+import React, {useRef, useCallback, useEffect} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {WebView} from 'react-native-webview';
-const HtmlData = require('./scripts/index.html');
+const getChartHtml = require('./getChartHtml');
 
 export default function AmCharts(props) {
-  const chartData = JSON.stringify(props.chartConfig);
-  const chartConfig = `
-  document.getElementById("scalingtag").setAttribute("content","width=device-width, initial-scale=${0.9 ||
-    props.initialScale}, maximum-scale=${0.9 || props.maximumScale}");
-  am4core.useTheme(am4themes_material);
-  am4core.useTheme(am4themes_animated);
-  am4core.ready(function() {
-    var amcoreChart = am4core.createFromConfig(${chartData},
-    "chartdiv",
-    am4charts.${props.chartType}
-    )
-  })
+  const {
+    chartConfig,
+    chartType,
+    style,
+    initialScale = 0.9,
+    maximumScale = 0.9,
+    themes = ['material', 'animated'],
+    onReady,
+  } = props;
+
+  const webViewRef = useRef(null);
+  const chartCreated = useRef(false);
+
+  const html = getChartHtml(initialScale, maximumScale);
+
+  const themeCode = themes
+    .map((t) => `am4core.useTheme(am4themes_${t});`)
+    .join('\n  ');
+
+  const initScript = `
+  (function() {
+    try {
+      ${themeCode}
+      am4core.ready(function() {
+        window.amChart = am4core.createFromConfig(
+          ${JSON.stringify(chartConfig)},
+          "chartdiv",
+          am4charts.${chartType}
+        );
+        window.ReactNativeWebView.postMessage(JSON.stringify({type: "ready"}));
+      });
+    } catch(e) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({type: "error", message: e.message}));
+    }
+  })();
+  true;
   `;
+
+  // Update chart data when chartConfig.data changes
+  useEffect(() => {
+    if (chartCreated.current && webViewRef.current && chartConfig.data) {
+      const updateScript = `
+        if(window.amChart) {
+          window.amChart.data = ${JSON.stringify(chartConfig.data)};
+        }
+        true;
+      `;
+      webViewRef.current.injectJavaScript(updateScript);
+    }
+  }, [chartConfig.data]);
+
+  const onMessage = useCallback(
+    (event) => {
+      try {
+        const msg = JSON.parse(event.nativeEvent.data);
+        if (msg.type === 'ready') {
+          chartCreated.current = true;
+          onReady && onReady();
+        }
+      } catch (e) {
+        // ignore non-JSON messages
+      }
+    },
+    [onReady],
+  );
+
   return (
-    <View style={[styles.loadingContiainer, {...props.style}]}>
-      {/* {isLoading ? <ActivityIndicator style={styles.loadingIndicator} /> : null} */}
+    <View style={[styles.container, style]}>
       <WebView
+        ref={webViewRef}
         style={styles.webView}
-        source={HtmlData}
-        startInLoadingState
-        injectedJavaScript={chartConfig}
+        source={{html}}
+        originWhitelist={['*']}
+        injectedJavaScript={initScript}
         javaScriptEnabled
-        useWebKit
-        onMessage={() => {
-          console.log('');
-        }}
-        scalesPageToFit
+        domStorageEnabled
+        onMessage={onMessage}
         scrollEnabled={false}
+        startInLoadingState
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  webView: {width: '100%', height: '100%'},
-  loading: {
-    width: 0,
-    height: 0,
-  },
-  loadingIndicator: {
-    alignSelf: 'center',
-    justifyContent: 'center',
-  },
-  loadingContiainer: {
-    height: '100%',
+  container: {
     width: '100%',
+    height: '100%',
+  },
+  webView: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
   },
 });

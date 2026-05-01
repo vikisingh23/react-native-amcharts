@@ -1,14 +1,29 @@
 {
   "name": "react-native-amcharts",
-  "version": "0.0.2g",
+  "version": "1.0.0",
+  "description": "React Native wrapper for AmCharts 4 using JSON-based config",
   "author": "Vikas Singh",
-  "private": false,
   "license": "MIT",
-  "keywords":[ "react-native", "amcharts", "charts", "react-native amcharts"],
   "main": "index.js",
-  "bundleDependencies": false,
+  "keywords": [
+    "react-native",
+    "amcharts",
+    "amcharts4",
+    "charts",
+    "react-native-charts"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/vikisingh23/react-native-amcharts.git"
-  }
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-native": ">=0.60.0",
+    "react-native-webview": ">=11.0.0"
+  },
+  "files": [
+    "index.js",
+    "src/BaseComponent.js",
+    "src/getChartHtml.js"
+  ]
 }

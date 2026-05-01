@@ -1,6 +1,4 @@
-/**
- * @format
- */
+import ReactNativeAmChart from './src/BaseComponent';
 
-import BaseComponent from './src/BaseComponent';
-module.exports = {ReactNativeAmChart: BaseComponent};
+export {ReactNativeAmChart};
+export default ReactNativeAmChart;

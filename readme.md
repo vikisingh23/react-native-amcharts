@@ -1,119 +1,105 @@
-# React-native AmCharts : - WIP
+# React Native AmCharts
 
+Unofficial React Native wrapper for [AmCharts 4](https://www.amcharts.com/) using [JSON-based Config](https://www.amcharts.com/docs/v4/concepts/json-config/).
 
-#### Unofficial React-Native wrapper package for using [AmCharts](https://www.amcharts.com/).
+## Features
 
-### Features
-1. Fully customizable wrapper for AmCharts4 using [JSON-based Config](https://www.amcharts.com/docs/v4/concepts/json-config/#Structure_of_JSON_config).
-2. All scripts loaded in the package  no CDN dependency for faster performance.
-3. Supported on Ios and Android.
+- AmCharts 4 via JSON config — no native code required
+- Works on iOS and Android
+- Dynamic data updates
+- Lightweight — scripts loaded from CDN (no bundled 43K-line HTML)
+- Compatible with React Native 0.60+ and react-native-webview 11+
 
-### Installing
-Get package from NPM in your React-native app:
+## Installation
 
-```npm i react-native-amcharts```
+```bash
+npm install react-native-amcharts react-native-webview
+```
 
-### Basic Usage Example
+For React Native 0.60+, WebView auto-links. For older versions:
 
-```javascript
+```bash
+react-native link react-native-webview
+```
+
+## Usage
+
+```jsx
 import React from 'react';
-import {Stylesheet} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {ReactNativeAmChart} from 'react-native-amcharts';
 
 const config = {
-  // Create pie series
   series: [
     {
       type: 'PieSeries',
-      dataFields: {
-        value: 'litres',
-        category: 'country',
-      },
+      dataFields: {value: 'litres', category: 'country'},
     },
   ],
-
-  // Add data
   data: [
-    {
-      country: 'Lithuania',
-      litres: 501.9,
-    },
-    {
-      country: 'Czech Republic',
-      litres: 301.9,
-    },
-    {
-      country: 'Ireland',
-      litres: 201.1,
-    },
-    {
-      country: 'Germany',
-      litres: 165.8,
-    },
-    {
-      country: 'Australia',
-      litres: 139.9,
-    },
-    {
-      country: 'Austria',
-      litres: 128.3,
-    },
-    {
-      country: 'UK',
-      litres: 99,
-    },
-    {
-      country: 'Belgium',
-      litres: 60,
-    },
-    {
-      country: 'The Netherlands',
-      litres: 50,
-    },
+    {country: 'Lithuania', litres: 501.9},
+    {country: 'Czech Republic', litres: 301.9},
+    {country: 'Ireland', litres: 201.1},
+    {country: 'Germany', litres: 165.8},
   ],
-
-  // And, for a good measure, let's add a legend
   legend: {},
 };
 
-const App = () => {
+export default function App() {
   return (
-    <>
-      <ReactNativeAmChart 
-        chartConfig={config} 
-        chartType="PieChart" 
-        style={styles.chartContainer} 
-        initialScale={0.9}
-        maximumScale={0.9}/>
-    </>
+    <View style={styles.container}>
+      <ReactNativeAmChart
+        chartConfig={config}
+        chartType="PieChart"
+        style={styles.chart}
+        onReady={() => console.log('Chart ready')}
+      />
+    </View>
   );
-};
+}
 
-const styles = Stylesheet.create({
-    chartContainer: {
-        height: '50%',
-        width: '100%',
-    }
-})
-export default App;
+const styles = StyleSheet.create({
+  container: {flex: 1},
+  chart: {height: '50%', width: '100%'},
+});
 ```
 
+## Dynamic Data
 
-#### Props Defitnition
+Update chart data by passing new `chartConfig.data`:
 
-- **style**  Styling chart container
+```jsx
+const [data, setData] = React.useState(initialData);
 
-- **chartType** Chart type definition from amcharts library
+<ReactNativeAmChart
+  chartConfig={{...config, data}}
+  chartType="XYChart"
+  style={styles.chart}
+/>
+```
 
-- **chartConfig**  JSON config for displaying the charts
+## Props
 
-- **initialScale** Initial Viewport scale for frame
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `chartConfig` | `object` | **required** | AmCharts 4 JSON config |
+| `chartType` | `string` | **required** | Chart type (e.g. `PieChart`, `XYChart`) |
+| `style` | `ViewStyle` | `{}` | Container style |
+| `initialScale` | `number` | `0.9` | WebView initial viewport scale |
+| `maximumScale` | `number` | `0.9` | WebView maximum viewport scale |
+| `themes` | `string[]` | `['material', 'animated']` | AmCharts themes to apply |
+| `onReady` | `function` | — | Called when chart finishes rendering |
 
-- **maximumScale** Maximum Viewport scale for frame
+## Supported Chart Types
 
+Any AmCharts 4 chart type works: `PieChart`, `XYChart`, `MapChart`, `RadarChart`, `TreeMap`, `SankeyDiagram`, etc.
 
+## Requirements
 
-##### Feature in progress
+- React Native >= 0.60
+- react-native-webview >= 11.0.0
+- Internet connection (CDN scripts)
 
-- Dynamic data addition to graph
+## License
 
+MIT
