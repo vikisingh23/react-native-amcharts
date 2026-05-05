@@ -1,10 +1,9 @@
 import { useRef, useEffect } from 'react';
 import type { RefObject } from 'react';
 import type WebView from 'react-native-webview';
-import type { ChartConfig, ChartType, AmTheme } from '../types';
+import type { ChartConfig, ChartType, AmTheme, AmChartsVersion, ChartSetupScript } from '../types';
 import { postMessage } from '../bridge';
 
-/** Shallow compare two values — returns true if different */
 function changed(a: unknown, b: unknown): boolean {
   if (a === b) return false;
   if (typeof a !== typeof b) return true;
@@ -12,49 +11,61 @@ function changed(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) !== JSON.stringify(b);
 }
 
-/**
- * Watches chartConfig and sends minimal updates to the WebView.
- * Full re-init only when chartType changes.
- */
 export function useSmartUpdate(
   webViewRef: RefObject<WebView | null>,
-  chartConfig: ChartConfig,
-  chartType: ChartType,
+  version: AmChartsVersion,
+  chartConfig: ChartConfig | undefined,
+  chartType: ChartType | undefined,
+  setupScript: ChartSetupScript | undefined,
   themes: AmTheme[],
   ready: boolean,
 ) {
   const prevConfig = useRef<ChartConfig | null>(null);
   const prevType = useRef<ChartType | null>(null);
+  const prevScript = useRef<ChartSetupScript | null>(null);
   const initialized = useRef(false);
 
-  // Full init on first ready or chartType change
   useEffect(() => {
     if (!ready) return;
 
+    if (version === 5) {
+      // v5: re-init when setupScript changes
+      if (!initialized.current || prevScript.current !== setupScript) {
+        if (setupScript) {
+          postMessage(webViewRef, { type: 'initV5', script: setupScript, themes });
+        }
+        initialized.current = true;
+        prevScript.current = setupScript || null;
+        prevConfig.current = chartConfig || null;
+        return;
+      }
+      // v5 data-only update
+      if (chartConfig?.data && changed(prevConfig.current?.data, chartConfig.data)) {
+        postMessage(webViewRef, { type: 'updateData', data: chartConfig.data });
+        prevConfig.current = chartConfig;
+      }
+      return;
+    }
+
+    // v4 logic (unchanged)
+    if (!chartConfig || !chartType) return;
+
     if (!initialized.current || prevType.current !== chartType) {
-      postMessage(webViewRef, {
-        type: 'init',
-        config: chartConfig,
-        chartType,
-        themes,
-      });
+      postMessage(webViewRef, { type: 'init', config: chartConfig, chartType, themes });
       initialized.current = true;
       prevType.current = chartType;
       prevConfig.current = chartConfig;
       return;
     }
 
-    // Smart diff: only send what changed
     const prev = prevConfig.current;
     if (!prev) return;
 
-    // Data-only change (most common case)
     if (changed(prev.data, chartConfig.data) && !changed(excludeKey(prev, 'data'), excludeKey(chartConfig, 'data'))) {
       if (chartConfig.data) {
         postMessage(webViewRef, { type: 'updateData', data: chartConfig.data });
       }
     } else if (changed(prev, chartConfig)) {
-      // Other config changed — send patch of changed keys
       const patch: Partial<ChartConfig> = {};
       for (const key of Object.keys(chartConfig)) {
         if (changed((prev as Record<string, unknown>)[key], (chartConfig as Record<string, unknown>)[key])) {
@@ -67,7 +78,7 @@ export function useSmartUpdate(
     }
 
     prevConfig.current = chartConfig;
-  }, [webViewRef, chartConfig, chartType, themes, ready]);
+  }, [webViewRef, version, chartConfig, chartType, setupScript, themes, ready]);
 }
 
 function excludeKey(obj: Record<string, unknown>, key: string): Record<string, unknown> {

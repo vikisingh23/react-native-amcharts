@@ -6,5 +6,7 @@ export type {
   ChartConfig,
   ChartType,
   AmTheme,
+  AmChartsVersion,
+  ChartSetupScript,
   ChartEvent,
 } from './types';

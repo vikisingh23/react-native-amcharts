@@ -26,7 +26,9 @@ export type AmTheme =
   | 'kelly'
   | (string & {});
 
-// ── Chart config (loose typing — amcharts4 JSON config is huge) ─────
+export type AmChartsVersion = 4 | 5;
+
+// ── Chart config (v4: JSON config, v5: imperative setup script) ─────
 
 export interface ChartConfig {
   data?: Record<string, unknown>[];
@@ -40,10 +42,28 @@ export interface ChartConfig {
   [key: string]: unknown;
 }
 
+/**
+ * For amcharts 5: a JS string that creates the chart imperatively.
+ * Available variables in scope: `root` (am5.Root), `am5`, `am5xy`, `am5percent`, `am5map`, etc.
+ * Must assign the chart to `window.chart`.
+ *
+ * Example:
+ * ```
+ * var chart = root.container.children.push(am5percent.PieChart.new(root, {}));
+ * var series = chart.series.push(am5percent.PieSeries.new(root, {
+ *   valueField: "value", categoryField: "category"
+ * }));
+ * series.data.setAll([{category: "A", value: 10}]);
+ * window.chart = chart;
+ * ```
+ */
+export type ChartSetupScript = string;
+
 // ── Bridge messages (RN ↔ WebView) ──────────────────────────────────
 
 export type BridgeMessageToWeb =
   | { type: 'init'; config: ChartConfig; chartType: ChartType; themes: AmTheme[] }
+  | { type: 'initV5'; script: ChartSetupScript; themes: AmTheme[] }
   | { type: 'updateData'; data: Record<string, unknown>[] }
   | { type: 'updateConfig'; patch: Partial<ChartConfig> }
   | { type: 'call'; id: string; method: string; args: unknown[] }
@@ -68,9 +88,9 @@ export interface ChartEvent {
 export interface ChartHandle {
   /** Call any method on the chart instance */
   call: (method: string, ...args: unknown[]) => Promise<unknown>;
-  /** Replace chart data */
+  /** Replace chart data (v4: chart.data, v5: first series data) */
   setData: (data: Record<string, unknown>[]) => void;
-  /** Patch chart config (smart merge) */
+  /** Patch chart config (v4 only — for v5 use injectScript) */
   updateConfig: (patch: Partial<ChartConfig>) => void;
   /** Dispose the chart */
   dispose: () => void;
@@ -81,18 +101,26 @@ export interface ChartHandle {
 // ── Component props ─────────────────────────────────────────────────
 
 export interface AmChartProps {
-  chartConfig: ChartConfig;
-  chartType: ChartType;
+  /** amcharts version: 4 (default) or 5 */
+  version?: AmChartsVersion;
+  /** v4: JSON config object. v5: ignored if setupScript is provided */
+  chartConfig?: ChartConfig;
+  /** v4: chart type string. v5: ignored if setupScript is provided */
+  chartType?: ChartType;
+  /**
+   * v5 only: imperative JS that creates the chart.
+   * Available globals: root, am5, am5xy, am5percent, am5map, am5radar, am5hierarchy, am5flow, am5wc.
+   * Must assign chart to `window.chart`.
+   */
+  setupScript?: ChartSetupScript;
   style?: ViewStyle;
-  /** Themes to apply (default: ['animated', 'material']) */
+  /** Themes to apply (default: ['Animated'] for v5, ['animated', 'material'] for v4) */
   themes?: AmTheme[];
   /** Viewport initial scale (default: 1) */
   initialScale?: number;
   /** Viewport maximum scale (default: 1) */
   maximumScale?: number;
-  /** Use bundled scripts instead of CDN (requires internet otherwise) */
-  offline?: boolean;
-  /** Custom CDN base URL (default: https://cdn.amcharts.com/lib/4) */
+  /** Custom CDN base URL */
   cdnBase?: string;
   /** Extra script URLs to load (e.g. geodata, plugins) */
   extraScripts?: string[];

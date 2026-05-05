@@ -4,35 +4,39 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useMemo,
 } from 'react';
 import {
   View,
-  Text,
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
-import type { AmChartProps, ChartHandle, BridgeMessageFromWeb } from './types';
+import type { AmChartProps, ChartHandle } from './types';
 import { buildChartHtml } from './html/template';
+import { buildChartHtmlV5 } from './html/templateV5';
 import { parseMessage } from './bridge';
 import { useChartBridge } from './hooks/useChartBridge';
 import { useSmartUpdate } from './hooks/useSmartUpdate';
 
-const CDN_DEFAULT = 'https://cdn.amcharts.com/lib/4';
+const CDN_V4 = 'https://cdn.amcharts.com/lib/4';
+const CDN_V5 = 'https://cdn.amcharts.com/lib/5';
 
 const AmChart = forwardRef<ChartHandle, AmChartProps>(function AmChart(
   props,
   ref,
 ) {
   const {
+    version = 4,
     chartConfig,
     chartType,
+    setupScript,
     style,
-    themes = ['animated', 'material'],
+    themes,
     initialScale = 1,
     maximumScale = 1,
-    cdnBase = CDN_DEFAULT,
+    cdnBase,
     extraScripts = [],
     onEvent,
     onReady,
@@ -41,6 +45,9 @@ const AmChart = forwardRef<ChartHandle, AmChartProps>(function AmChart(
     renderError,
   } = props;
 
+  const resolvedCdn = cdnBase || (version === 5 ? CDN_V5 : CDN_V4);
+  const resolvedThemes = themes || (version === 5 ? ['Animated'] : ['animated', 'material']);
+
   const webViewRef = useRef<WebView>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,17 +55,27 @@ const AmChart = forwardRef<ChartHandle, AmChartProps>(function AmChart(
 
   const { resolveCall, rejectCall } = useChartBridge(webViewRef, ref);
 
-  // Smart updates: diffs config and sends minimal messages
-  useSmartUpdate(webViewRef, chartConfig, chartType, themes, ready);
+  useSmartUpdate(webViewRef, version, chartConfig, chartType, setupScript, resolvedThemes, ready);
 
-  const html = buildChartHtml({
-    chartType,
-    themes,
-    initialScale,
-    maximumScale,
-    cdnBase,
-    extraScripts,
-  });
+  const html = useMemo(() => {
+    if (version === 5) {
+      return buildChartHtmlV5({
+        themes: resolvedThemes,
+        initialScale,
+        maximumScale,
+        cdnBase: resolvedCdn,
+        extraScripts,
+      });
+    }
+    return buildChartHtml({
+      chartType: chartType || 'XYChart',
+      themes: resolvedThemes,
+      initialScale,
+      maximumScale,
+      cdnBase: resolvedCdn,
+      extraScripts,
+    });
+  }, [version, resolvedCdn, resolvedThemes, initialScale, maximumScale, extraScripts, chartType]);
 
   const handleMessage = useCallback(
     (event: WebViewMessageEvent) => {
@@ -91,7 +108,6 @@ const AmChart = forwardRef<ChartHandle, AmChartProps>(function AmChart(
     [onReady, onError, onEvent, resolveCall, rejectCall],
   );
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (webViewRef.current) {
@@ -100,7 +116,6 @@ const AmChart = forwardRef<ChartHandle, AmChartProps>(function AmChart(
     };
   }, []);
 
-  // Error state
   if (error && renderError) {
     return <View style={[styles.container, style]}>{renderError(error)}</View>;
   }
