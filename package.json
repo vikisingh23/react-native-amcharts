@@ -1,6 +1,6 @@
 {
-  "name": "react-native-amcharts",
-  "version": "2.1.0",
+  "name": "react-native-amcharts5",
+  "version": "2.1.1",
   "description": "React Native wrapper for AmCharts 4 — TypeScript, bidirectional bridge, smart updates",
   "author": "Vikas Singh",
   "license": "MIT",

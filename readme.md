@@ -14,7 +14,7 @@ TypeScript wrapper for [AmCharts](https://www.amcharts.com/) in React Native. Su
 ## Installation
 
 ```bash
-npm install react-native-amcharts react-native-webview
+npm install react-native-amcharts5 react-native-webview
 ```
 
 ---
@@ -22,7 +22,7 @@ npm install react-native-amcharts react-native-webview
 ## amcharts 4 (JSON config)
 
 ```tsx
-import { ReactNativeAmChart } from 'react-native-amcharts';
+import { ReactNativeAmChart } from 'react-native-amcharts5';
 
 const config = {
   series: [{
@@ -51,7 +51,7 @@ const config = {
 amcharts 5 has no JSON config API — charts are created imperatively. Pass a `setupScript` string:
 
 ```tsx
-import { ReactNativeAmChart } from 'react-native-amcharts';
+import { ReactNativeAmChart } from 'react-native-amcharts5';
 
 const setup = `
   var chart = root.container.children.push(
@@ -117,7 +117,7 @@ Works with both v4 and v5:
 
 ```tsx
 import { useRef } from 'react';
-import { ReactNativeAmChart, ChartHandle } from 'react-native-amcharts';
+import { ReactNativeAmChart, ChartHandle } from 'react-native-amcharts5';
 
 function Dashboard() {
   const chartRef = useRef<ChartHandle>(null);
